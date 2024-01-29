@@ -2,10 +2,13 @@ import { Box, Text, Avatar, Button } from "@chakra-ui/react";
 import { jwtDecode } from "jwt-decode";
 import { UserAPI } from "../types/user";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../stores/types/rootState";
 
 export default function mini_card() {
-  const token = localStorage.getItem("token") + "";
-  const user = jwtDecode<{ User: UserAPI }>(token);
+  // const token = localStorage.getItem("token") + "";
+  // const user = jwtDecode<{ User: UserAPI }>(token);
+  const auth = useSelector((state: RootState) => state.auth);
 
   return (
     <>
@@ -48,14 +51,14 @@ export default function mini_card() {
               borderWidth={2}
               borderColor={"white"}
               name="Segun Adebayo"
-              src={user.User.profile_picture}
+              src={auth.auth.profile_picture}
             />
           </Box>
-          <Text>{user.User.fullname}</Text>
+          <Text>{auth.auth.fullname}</Text>
           <Text fontSize={"sm"} color={"gray.300"}>
-            @{user.User.username}
+            @{auth.auth.username}
           </Text>
-          <Text>picked by worms,who eat bikini bottom</Text>
+          <Text>❤ {auth.auth.profile_description} ❤</Text>
           <Text>
             23 <span style={{ fontSize: "14px" }}>Following</span> 291{" "}
             <span style={{ fontSize: "14px" }}>Followers </span>

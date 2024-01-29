@@ -11,17 +11,71 @@ import {
   Tabs,
   Text,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import Navbar1 from "../components/navbar";
 import Mini_card from "../components/mini_card";
 import Suggest from "../components/suggest";
 import { RiImageEditFill } from "react-icons/ri";
 import { jwtDecode } from "jwt-decode";
 import { UserAPI } from "../types/user";
+import { API } from "../libs/api";
+import { useSelector } from "react-redux";
+import { RootState } from "../stores/types/rootState";
+import { useDispatch } from "react-redux";
+import { AUTH_LOGIN } from "../stores/slices/authSlice";
 
 export default function profile() {
-  const token = localStorage.getItem("token") + "";
-  const user = jwtDecode<{ User: UserAPI }>(token);
+  // const token = localStorage.getItem("token") + "";
+  // const user = jwtDecode<{ User: UserAPI }>(token);
+  const auth = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const [user, setUser] = useState<UserAPI[]>([]);
+  const [preImg, setPreimg] = useState("");
+  const [form, setForm] = useState({
+    username: "",
+    fullname: "",
+    profile_picture: "",
+    profile_description: "",
+  });
+
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const { name, value, files } = event.target;
+
+    if (files) {
+      setForm({
+        ...form,
+        [name]: files[0],
+      });
+      const img = URL.createObjectURL(files[0]);
+      setPreimg(img);
+    } else {
+      setForm({
+        ...form,
+        [name]: value,
+      });
+    }
+  }
+
+  async function handleSubmit(event: any) {
+    event.preventDefault();
+
+    let formData = new FormData();
+
+    formData.append("fullname", form.fullname);
+    formData.append("username", form.username);
+    formData.append("profile_picture", form.profile_picture);
+    formData.append("profile_description", form.profile_description);
+
+    const res = await API.patch("/users", formData);
+    console.log("ini res", res.data);
+
+    dispatch(AUTH_LOGIN(res.data));
+  }
+
+  // useEffect(() => {
+  //   auth;
+  // }, [auth]);
+  // console.log(auth.auth);
 
   return (
     <>
@@ -80,14 +134,14 @@ export default function profile() {
                             borderWidth={2}
                             borderColor={"white"}
                             name="Segun Adebayo"
-                            src={user.User.profile_picture}
+                            src={auth.auth.profile_picture}
                           />
                         </Box>
-                        <Text>{user.User.fullname}</Text>
+                        <Text>{auth.auth.fullname}</Text>
                         <Text fontSize={"sm"} color={"gray.300"}>
-                          @{user.User.username}
+                          @{auth.auth.username}
                         </Text>
-                        <Text>picked by worms,who eat bikini bottom</Text>
+                        <Text>{auth.auth.profile_description}</Text>
                         <Text>
                           23 <span style={{ fontSize: "14px" }}>Following</span>{" "}
                           291{" "}
@@ -102,7 +156,7 @@ export default function profile() {
               {/* panel edit */}
               <TabPanel>
                 <Box margin={"auto"}>
-                  <form action="">
+                  <form encType="multipart/form-data" action="">
                     <Text fontWeight={"bold"} mb={"10px"} textAlign={"center"}>
                       Add image
                     </Text>
@@ -121,7 +175,12 @@ export default function profile() {
                           name="Segun Adebayo"
                           src=""
                         />
-                        <input name="image" id="post-id" type="file" hidden />
+                        <input
+                          name="profile_picture"
+                          id="post-id"
+                          type="file"
+                          hidden
+                        />
                         <Icon
                           marginLeft={"-25px"}
                           boxSize={"30px"}
@@ -131,16 +190,36 @@ export default function profile() {
                     </Box>
                     <label htmlFor="fullname">
                       Edit fullname
-                      <Input id="fullname" placeholder="Edit Fullname" />
+                      <Input
+                        value={form.fullname}
+                        onChange={handleChange}
+                        name="fullname"
+                        id="fullname"
+                        placeholder="Edit Fullname"
+                      />
                     </label>
                     <label htmlFor="username">
                       Username
-                      <Input id="username" placeholder="Edit username" />
+                      <Input
+                        value={form.username}
+                        name="username"
+                        onChange={handleChange}
+                        id="username"
+                        placeholder="Edit username"
+                      />
                     </label>
                     <label htmlFor="bio">
                       Add Bio
-                      <Input id="bio" placeholder="Edit Fullname" />
+                      <Input
+                        value={form.profile_description}
+                        onChange={handleChange}
+                        name="profile_description"
+                        id="bio"
+                        placeholder="Edit Fullname"
+                      />
                     </label>
+
+                    <Button onClick={handleSubmit}>submit</Button>
                   </form>
                 </Box>
               </TabPanel>

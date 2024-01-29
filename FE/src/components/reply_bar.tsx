@@ -17,7 +17,7 @@ export default function replyBar(props: any) {
             mr={3}
             size="sm"
             name="Kent Dodds"
-            src="https://bit.ly/kent-c-dodds"
+            src={props.profile_picture}
           />
           <Text fontWeight={"bold"}>
             {props.fullname}

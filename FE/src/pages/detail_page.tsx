@@ -83,6 +83,10 @@ export default function detailPage() {
     if (res.data.massage) {
     }
     setCreateRep(res.data.data);
+    setForm({
+      image: "",
+      content: "",
+    });
   }
 
   useEffect(() => {
@@ -176,7 +180,7 @@ export default function detailPage() {
                       mr={3}
                       size="sm"
                       name="Kent Dodds"
-                      src="https://bit.ly/kent-c-dodds"
+                      src={data1[0].user.profile_picture}
                     />
 
                     <form
@@ -189,6 +193,7 @@ export default function detailPage() {
                           type="text"
                           name="content"
                           onChange={handleChange}
+                          value={form.content}
                         />
                       </Box>
 
@@ -222,6 +227,7 @@ export default function detailPage() {
             {replyGet.length > 0 &&
               replyGet.map((r: ReplyInterface) => (
                 <ReplyBar
+                  profile_picture={r.user.profile_picture}
                   username={r.user.username}
                   fullname={r.user.fullname}
                   content={r.content}

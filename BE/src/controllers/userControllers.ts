@@ -9,6 +9,9 @@ export default new (class UserControllers {
   create(req: Request, res: Response) {
     UserService.create(req, res);
   }
+  update(req: Request, res: Response) {
+    UserService.update(req, res);
+  }
 
   login(req: Request, res: Response) {
     UserService.login(req, res);

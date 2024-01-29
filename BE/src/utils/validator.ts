@@ -24,3 +24,13 @@ export const replySchema = Joi.object({
   thread: Joi.number(),
   user: Joi.number(),
 });
+
+export const updateUserSchema = Joi.object({
+  username: Joi.string().allow(null, ""),
+  fullname: Joi.string().allow(null, ""),
+  email: Joi.string(),
+  // password: Joi.string(),
+  profile_picture: Joi.string().allow(null, ""),
+  profile_description: Joi.string().allow(null, ""),
+  bio: Joi.string().allow(null, ""),
+});

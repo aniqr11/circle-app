@@ -1,6 +1,6 @@
 import { combineReducers, createSlice } from "@reduxjs/toolkit";
 import { UserAPI } from "../../types/user";
-import { API, SetAuthToken } from "../../libs/api";
+import { SetAuthToken } from "../../libs/api";
 import { jwtDecode } from "jwt-decode";
 
 const initialState: UserAPI = {
@@ -28,8 +28,8 @@ export const authSlice = createSlice({
         email: decoded.User.email,
         fullname: decoded.User.fullname,
         profile_picture: decoded.User.profile_picture,
-        username: " ",
-        profile_description: " ",
+        username: decoded.User.username,
+        profile_description: decoded.User.profile_description,
       };
 
       state.email = user.email;

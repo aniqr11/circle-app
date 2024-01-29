@@ -19,10 +19,14 @@ import { useQuery } from "@tanstack/react-query";
 import ThreadsInterface from "../types/threads";
 import { Link, Link as ReactRouterLink } from "react-router-dom";
 import moment from "moment";
+import { useSelector } from "react-redux";
+import { RootState } from "../stores/types/rootState";
 
 export default function center_page() {
   const [preImg, setPreimg] = useState("");
   // const [content, setContent] = useState("");
+  const [load, setLoad] = useState(false);
+  const auth = useSelector((state: RootState) => state.auth);
   const [form, setForm] = useState({
     image: "",
     content: "",
@@ -56,16 +60,23 @@ export default function center_page() {
     }
   }
 
-  function handleSubmit(event: any) {
+  async function handleSubmit(event: any) {
     event.preventDefault();
 
     let formData = new FormData();
 
     formData.append("content", form.content);
     formData.append("image", form.image);
+    setLoad(true);
 
-    API.post("/threads", formData);
+    await API.post("/threads", formData);
+    setLoad(false);
     refetch();
+    setForm({
+      image: "",
+      content: "",
+    });
+    setPreimg("");
   }
 
   // console.log(form);
@@ -76,7 +87,7 @@ export default function center_page() {
   //     setPreimg(img);
   //   }
   // };
-  console.log(data);
+  // console.log(data);
 
   return (
     <>
@@ -91,7 +102,7 @@ export default function center_page() {
           mr={3}
           size="sm"
           name="Kent Dodds"
-          src="https://bit.ly/kent-c-dodds"
+          src={auth.auth.profile_picture}
         />
 
         <form
@@ -99,7 +110,12 @@ export default function center_page() {
           encType="multipart/form-data"
         >
           <Box w={"100%"} mr={1}>
-            <Input type="text" name="content" onChange={handleChange} />
+            <Input
+              type="text"
+              name="content"
+              value={form.content}
+              onChange={handleChange}
+            />
             {preImg && (
               <Box>
                 <img src={preImg} alt="" />
@@ -140,7 +156,8 @@ export default function center_page() {
 
       {/* box3 */}
 
-      {data &&
+      {!load &&
+        data &&
         data.map((data: ThreadsInterface) => (
           <Box
             display={"flex"}

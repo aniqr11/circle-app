@@ -23,9 +23,7 @@ export default function search_page() {
 
   async function getUser() {
     const response = await API.get(`/users`);
-    const data = response.data.data.filter(
-      (u: UserInterface) => u.id != auth.id
-    );
+    const data = response.data.data.filter((u: any) => u.id != auth.auth.id);
     setUser(data);
     setFilter(data);
     console.log(auth.id);

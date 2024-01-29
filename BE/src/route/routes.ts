@@ -5,6 +5,7 @@ import auth_middleware from "../middleware/user_middleware";
 // import upload_file from "../middleware/upload_file";
 import uploadImage from "../middleware/upload_file";
 import ReplyControllers from "../controllers/reply_controllers";
+import userControllers from "../controllers/userControllers";
 
 const router = Router();
 
@@ -14,7 +15,7 @@ router.get("/threads/:id", ThreadsControllers.findOne);
 router.post(
   "/threads",
   auth_middleware.auth,
-  uploadImage.single("image"),
+  uploadImage.upload("image"),
   ThreadsControllers.create
 );
 
@@ -24,6 +25,12 @@ router.post("/login", UserControllers.login); //untuk login
 router.get("/check", auth_middleware.auth, UserControllers.check); //untuk login
 router.get("/search", UserControllers.findOne); //untuk search
 router.get("/users", UserControllers.findAll); //untuk search
+router.patch(
+  "/users",
+  auth_middleware.auth,
+  uploadImage.upload("profile_picture"),
+  userControllers.update
+);
 
 //reply
 router.get("/reply/:threadId", ReplyControllers.find);
