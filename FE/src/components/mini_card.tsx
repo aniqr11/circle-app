@@ -4,11 +4,34 @@ import { UserAPI } from "../types/user";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../stores/types/rootState";
+import { useQuery } from "@tanstack/react-query";
+import { API } from "../libs/api";
 
 export default function mini_card() {
   // const token = localStorage.getItem("token") + "";
   // const user = jwtDecode<{ User: UserAPI }>(token);
   const auth = useSelector((state: RootState) => state.auth);
+
+  async function getFollowing() {
+    const response = await API.get("/following");
+
+    return response.data.data;
+  }
+
+  async function getFollower() {
+    const response = await API.get("/follower");
+
+    return response.data.data;
+  }
+  const { data: dataFollowing } = useQuery({
+    queryKey: ["following"],
+    queryFn: getFollowing,
+  });
+
+  const { data: dataFollower } = useQuery({
+    queryKey: ["folower"],
+    queryFn: getFollower,
+  });
 
   return (
     <>
@@ -58,10 +81,12 @@ export default function mini_card() {
           <Text fontSize={"sm"} color={"gray.300"}>
             @{auth.auth.username}
           </Text>
-          <Text>❤ {auth.auth.profile_description} ❤</Text>
+          <Text>"{!auth.auth.profile_description && "Tidak ada bio"}"</Text>
           <Text>
-            23 <span style={{ fontSize: "14px" }}>Following</span> 291{" "}
-            <span style={{ fontSize: "14px" }}>Followers </span>
+            {dataFollowing && dataFollowing.length}{" "}
+            <span style={{ fontSize: "14px" }}>Following</span>{" "}
+            {dataFollower && dataFollower.length}
+            <span style={{ fontSize: "14px" }}> Followers </span>
           </Text>
         </Box>
       </Box>

@@ -17,7 +17,9 @@ export default function navbar1() {
     dispatch(AUTH_LOGOUT());
     navigate("/login");
   };
-  // const { colorMode, toggleColorMode } = useColorMode();
+
+  const { toggleColorMode } = useColorMode();
+
   return (
     <>
       <Box
@@ -97,6 +99,7 @@ export default function navbar1() {
         </List>
 
         <Box display={"flex"} mt={"200px"} justifyContent={"center"}>
+          {/* <Button onClick={toggleColorMode}>hahahahahah</Button> */}
           <Button onClick={logout} colorScheme="black" variant="ghost">
             <Icon as={CiLogout} />
             Logout

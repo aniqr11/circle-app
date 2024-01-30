@@ -34,3 +34,12 @@ export const updateUserSchema = Joi.object({
   profile_description: Joi.string().allow(null, ""),
   bio: Joi.string().allow(null, ""),
 });
+
+export const FollowSchema = Joi.object({
+  user: Joi.number(),
+});
+
+export const likeSchema = Joi.object({
+  user: Joi.number(),
+  thread: Joi.number(),
+});

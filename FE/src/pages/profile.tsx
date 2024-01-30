@@ -23,6 +23,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../stores/types/rootState";
 import { useDispatch } from "react-redux";
 import { AUTH_LOGIN } from "../stores/slices/authSlice";
+import { useQuery } from "@tanstack/react-query";
 
 export default function profile() {
   // const token = localStorage.getItem("token") + "";
@@ -38,23 +39,30 @@ export default function profile() {
     profile_description: "",
   });
 
-  function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    const { name, value, files } = event.target;
-
-    if (files) {
-      setForm({
-        ...form,
-        [name]: files[0],
-      });
-      const img = URL.createObjectURL(files[0]);
-      setPreimg(img);
-    } else {
-      setForm({
-        ...form,
-        [name]: value,
-      });
-    }
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.files ? e.target.files : e.target.value,
+    });
   }
+
+  // function handleChange(event: ChangeEvent<HTMLInputElement>) {
+  //   const { name, value, files } = event.target;
+
+  //   if (files) {
+  //     setForm({
+  //       ...form,
+  //       [name]: files[0],
+  //     });
+  //     const img = URL.createObjectURL(files[0]);
+  //     setPreimg(img);
+  //   } else {
+  //     setForm({
+  //       ...form,
+  //       [name]: value,
+  //     });
+  //   }
+  // }
 
   async function handleSubmit(event: any) {
     event.preventDefault();
@@ -76,6 +84,27 @@ export default function profile() {
   //   auth;
   // }, [auth]);
   // console.log(auth.auth);
+
+  async function getFollowing() {
+    const response = await API.get("/following");
+
+    return response.data.data;
+  }
+
+  async function getFollower() {
+    const response = await API.get("/follower");
+
+    return response.data.data;
+  }
+  const { data: dataFollowing } = useQuery({
+    queryKey: ["following"],
+    queryFn: getFollowing,
+  });
+
+  const { data: dataFollower } = useQuery({
+    queryKey: ["folower"],
+    queryFn: getFollower,
+  });
 
   return (
     <>
@@ -143,9 +172,10 @@ export default function profile() {
                         </Text>
                         <Text>{auth.auth.profile_description}</Text>
                         <Text>
-                          23 <span style={{ fontSize: "14px" }}>Following</span>{" "}
-                          291{" "}
-                          <span style={{ fontSize: "14px" }}>Followers </span>
+                          {dataFollowing && dataFollowing.length}{" "}
+                          <span style={{ fontSize: "14px" }}>Following</span>{" "}
+                          {dataFollower && dataFollower.length}
+                          <span style={{ fontSize: "14px" }}> Followers </span>
                         </Text>
                       </Box>
                     </Box>

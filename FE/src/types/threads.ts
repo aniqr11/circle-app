@@ -12,7 +12,16 @@ export default interface ThreadsInterface {
     username: string;
   };
   reply: [];
+  likes: like[];
   created_at: string;
+}
+
+interface like {
+  user: {
+    id: number;
+  };
+  thread_id: number;
+  id: number;
 }
 
 export interface UserInterface {

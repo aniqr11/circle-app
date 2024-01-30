@@ -4,20 +4,18 @@ import {
   Avatar,
   Button,
   Icon,
-  Textarea,
   Image,
-  Link as ChakraLink,
   Input,
 } from "@chakra-ui/react";
-import { ChangeEvent, useState, useEffect, FormEvent } from "react";
+import { ChangeEvent, useState } from "react";
 import { RiImageAddFill } from "react-icons/ri";
 import { FaHeart } from "react-icons/fa";
 import { BiCommentDetail } from "react-icons/bi";
 import { ImCancelCircle } from "react-icons/im";
 import { API } from "../libs/api";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ThreadsInterface from "../types/threads";
-import { Link, Link as ReactRouterLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 import moment from "moment";
 import { useSelector } from "react-redux";
 import { RootState } from "../stores/types/rootState";
@@ -31,14 +29,36 @@ export default function center_page() {
     image: "",
     content: "",
   });
+  const [like, setLike] = useState({
+    thread: 0,
+  });
+
+  const queryClient = useQueryClient();
+
+  const { mutate: handleLike } = useMutation({
+    mutationFn: () => {
+      return API.post(`like`, like);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["thread"] });
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+  });
+
+  function handleClick(threadId: number) {
+    setLike({ thread: threadId });
+    handleLike();
+  }
 
   async function getThreads() {
     const response = await API.get("/threads");
-    return response.data;
+    return response.data.data;
   }
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["todos"],
+  const { data, refetch } = useQuery({
+    queryKey: ["thread"],
     queryFn: getThreads,
   });
 
@@ -79,8 +99,6 @@ export default function center_page() {
     setPreimg("");
   }
 
-  // console.log(form);
-
   // const preview = (e: ChangeEvent<HTMLInputElement>) => {
   //   if (e.target.files && e.target.files[0]) {
   //     const img = URL.createObjectURL(e.target.files[0]);
@@ -118,7 +136,11 @@ export default function center_page() {
             />
             {preImg && (
               <Box>
-                <img src={preImg} alt="" />
+                <img
+                  style={{ width: "70%", height: "70%" }}
+                  src={preImg}
+                  alt=""
+                />
                 <Button
                   _hover={{
                     background: "gray",
@@ -155,10 +177,9 @@ export default function center_page() {
       </Box>
 
       {/* box3 */}
-
       {!load &&
         data &&
-        data.map((data: ThreadsInterface) => (
+        data?.map((data: ThreadsInterface) => (
           <Box
             display={"flex"}
             key={data.id}
@@ -203,15 +224,23 @@ export default function center_page() {
                     alt="Dan Abramov"
                   />
                 </Link>
-                <Button bg={"transparent"}>
-                  <Icon color="red" as={FaHeart} />
+                <Button onClick={() => handleClick(data.id)} bg={"transparent"}>
+                  <Icon
+                    color={
+                      data.likes &&
+                      data.likes.some((like) => like.user.id === auth.auth.id)
+                        ? "red"
+                        : ""
+                    }
+                    as={FaHeart}
+                  />
                 </Button>
-                11
+                {data.likes && data.likes.length}
                 <Link to={"/detail-page/" + data.id}>
                   <Button bg={"transparent"}>
                     <Icon mr={"-10px"} as={BiCommentDetail} />
                   </Button>
-                  {data.reply.length}
+                  {data.reply && data.reply.length}
                 </Link>
               </Box>
             </Box>

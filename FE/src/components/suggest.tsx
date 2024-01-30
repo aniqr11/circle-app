@@ -1,20 +1,56 @@
 import { Box, Text, Avatar, Button } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { UserInterface } from "../types/threads";
 import { API } from "../libs/api";
+import { RootState } from "../stores/store";
+import { useSelector } from "react-redux";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function suggest() {
-  const [data, setData] = useState<UserInterface[]>([]);
+  const auth = useSelector((state: RootState) => state.auth);
+  const [Click, setClick] = useState({ user: 0 });
 
-  async function getData() {
-    const res = await API.get("/users");
-
-    setData(res.data.data);
+  async function getUser() {
+    const response = await API.get(`/users`);
+    const data = response.data.data.filter((u: any) => u.id != auth.auth.id);
+    return data;
   }
 
-  useEffect(() => {
-    getData();
-  }, []);
+  async function getFollowing() {
+    const response = await API.get("/following");
+
+    return response.data.data;
+  }
+
+  const { data: dataFollowing } = useQuery({
+    queryKey: ["following"],
+    queryFn: getFollowing,
+  });
+
+  const queryClient = useQueryClient();
+
+  const { data: dataUser } = useQuery({
+    queryKey: ["users"],
+    queryFn: getUser,
+  });
+
+  const { mutate: handleFollow } = useMutation({
+    mutationFn: () => {
+      return API.post(`follow`, Click);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["following"] });
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+  });
+
+  async function handleClickFollow(userId: number) {
+    setClick({ user: userId });
+    handleFollow();
+  }
+
   return (
     <>
       <Box
@@ -30,8 +66,8 @@ export default function suggest() {
           Suggested for you
         </Text>
 
-        {data &&
-          data.map((d) => (
+        {dataUser &&
+          dataUser.map((d: any) => (
             <>
               <Box borderRadius={"10px"} w={"100%"} mb={"8px"}>
                 <Box display={"flex"}>
@@ -58,8 +94,12 @@ export default function suggest() {
                       fontSize={10}
                       borderRadius={20}
                       ml={"40px"}
+                      onClick={() => handleClickFollow(d.id)}
                     >
-                      Follow
+                      {dataFollowing &&
+                      dataFollowing.some((f: any) => f.id === d.id)
+                        ? "Unfollow"
+                        : "Follow"}
                     </Button>
                   </Box>
                 </Box>

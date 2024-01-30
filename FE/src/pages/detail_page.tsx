@@ -21,13 +21,10 @@ import ThreadsInterface, { ReplyInterface } from "../types/threads";
 import { IoSend } from "react-icons/io5";
 import ReplyBar from "../components/reply_bar";
 import moment from "moment";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function detailPage() {
-  // const [showReply, setShowReply] = useState<boolean>(false);
-  const [data1, setData] = useState<ThreadsInterface[]>([]);
-  const [replyGet, setReplyGet] = useState<ReplyInterface[]>([]);
   const { id } = useParams();
-  const [createRep, setCreateRep] = useState({});
   const [form, setForm] = useState({
     image: "",
     content: "",
@@ -35,20 +32,28 @@ export default function detailPage() {
 
   async function getThreads() {
     const response = await API.get(`/threads/${id}`);
-    setData(response.data.data);
+    return response.data.data;
   }
 
   async function getReply() {
     const response = await API.get(`/reply/${id}`);
-    setReplyGet(response.data.data);
+    return response.data.data;
+  }
+  async function getLikes() {
+    const response = await API.get(`/like/${id}`);
+    return response.data;
   }
 
-  // const query = useQuery({
-  //   queryKey: ["todos"],
-  //   queryFn: getReply,
-  // });
+  const { data: dataThreads } = useQuery({
+    queryKey: ["thread"],
+    queryFn: getThreads,
+  });
+  const { data: dataReply } = useQuery({
+    queryKey: ["reply"],
+    queryFn: getReply,
+  });
 
-  // console.log("Data", query.data);
+  const queryClient = useQueryClient();
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const { name, value, files } = event.target;
@@ -71,29 +76,27 @@ export default function detailPage() {
   async function handleSubmit(event: any) {
     event.preventDefault();
 
-    // let formData = new FormData();
-
-    // formData.append("content", form.content);
-    // formData.append("image", form.image);
-
-    const res = await API.post("/reply", {
+    await API.post(`reply`, {
       content: form.content,
       thread: id,
     });
-    if (res.data.massage) {
-    }
-    setCreateRep(res.data.data);
+
+    queryClient.invalidateQueries({ queryKey: ["thread"] });
+    queryClient.invalidateQueries({ queryKey: ["reply"] });
+
     setForm({
       image: "",
       content: "",
     });
   }
-
   useEffect(() => {
-    getThreads();
-    getReply();
-  }, [createRep]);
-
+    getLikes();
+  }, []);
+  async function handleLikeClick() {
+    await API.post("/like", { thread: id });
+    queryClient.invalidateQueries({ queryKey: ["thread"] });
+    queryClient.invalidateQueries({ queryKey: ["likes"] });
+  }
   return (
     <>
       <Box display={"flex"}>
@@ -117,7 +120,7 @@ export default function detailPage() {
             borderRightWidth={"2px"}
             borderColor="green"
           >
-            {data1[0] ? (
+            {dataThreads && dataThreads[0] ? (
               <>
                 <Box mr={3}>
                   <Avatar
@@ -125,12 +128,12 @@ export default function detailPage() {
                     borderColor={"white"}
                     size="sm"
                     name="Kent Dodds"
-                    src={data1[0].user.profile_picture}
+                    src={dataThreads[0].user.profile_picture}
                   />
                 </Box>
                 <Box>
                   <Text mb={1} fontWeight={"bold"}>
-                    {data1[0].user.fullname}
+                    {dataThreads[0].user.fullname}
                     <span
                       style={{
                         fontSize: "14px",
@@ -138,25 +141,25 @@ export default function detailPage() {
                         color: "gray",
                       }}
                     >
-                      @{data1[0].user.username}•{" "}
-                      {moment(data1[0].created_at + "")
+                      @{dataThreads[0].user.username}•{" "}
+                      {moment(dataThreads[0].created_at + "")
                         .startOf("minute")
                         .fromNow()}{" "}
                     </span>
                   </Text>
                   <Box w={"600px"}>
-                    <Text fontSize={"14px"}>{data1[0].content}</Text>
+                    <Text fontSize={"14px"}>{dataThreads[0].content}</Text>
                     <Image
                       boxSize="350px"
                       h={"200px"}
                       objectFit="cover"
-                      src={data1[0].image}
+                      src={dataThreads[0].image}
                       alt="Dan Abramov"
                     />
                     <Button bg={"transparent"}>
-                      <Icon color="red" as={FaHeart} />
+                      <Icon color={"red"} as={FaHeart} />
                     </Button>
-                    11
+                    0
                     <Button bg={"transparent"}>
                       <Icon as={BiCommentDetail} />
                     </Button>
@@ -180,7 +183,7 @@ export default function detailPage() {
                       mr={3}
                       size="sm"
                       name="Kent Dodds"
-                      src={data1[0].user.profile_picture}
+                      src={dataThreads[0].user.profile_picture}
                     />
 
                     <form
@@ -224,8 +227,10 @@ export default function detailPage() {
             >
               All comments
             </Text>
-            {replyGet.length > 0 &&
-              replyGet.map((r: ReplyInterface) => (
+
+            {dataReply &&
+              dataReply.length > 0 &&
+              dataReply.map((r: any) => (
                 <ReplyBar
                   profile_picture={r.user.profile_picture}
                   username={r.user.username}

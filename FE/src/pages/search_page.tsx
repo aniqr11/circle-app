@@ -8,37 +8,60 @@ import { API } from "../libs/api";
 import { UserInterface } from "../types/threads";
 import { useSelector } from "react-redux";
 import { RootState } from "../stores/types/rootState";
-
-type SearchUser = {
-  id: number;
-  username: string;
-  fullname: string;
-  profile_picture: string;
-};
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function search_page() {
   const [filter, setFilter] = useState<UserInterface[]>([]);
-  const [user, setUser] = useState<UserInterface[]>([]);
   const auth = useSelector((state: RootState) => state.auth);
+  const [Click, setClick] = useState({ user: 0 });
 
   async function getUser() {
     const response = await API.get(`/users`);
     const data = response.data.data.filter((u: any) => u.id != auth.auth.id);
-    setUser(data);
-    setFilter(data);
-    console.log(auth.id);
+    return data;
+  }
+
+  async function getFollowing() {
+    const response = await API.get("/following");
+
+    return response.data.data;
+  }
+
+  const { data: dataUser } = useQuery({
+    queryKey: ["users"],
+    queryFn: getUser,
+  });
+
+  const { data: dataFollowing } = useQuery({
+    queryKey: ["following"],
+    queryFn: getFollowing,
+  });
+
+  const queryClient = useQueryClient();
+  const { mutate: handleFollow } = useMutation({
+    mutationFn: () => {
+      return API.post(`follow`, Click);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["following"] });
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+  });
+
+  async function handleClickFollow(userId: number) {
+    setClick({ user: userId });
+    handleFollow();
   }
 
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-    const filteredUser = user.filter((u) =>
+    const filteredUser = dataUser.filter((u: any) =>
       u.username.toLowerCase().startsWith(e.target.value.toLowerCase())
     );
     setFilter(filteredUser);
   };
-
-  useEffect(() => {
-    getUser();
-  }, []);
 
   return (
     <>
@@ -113,8 +136,12 @@ export default function search_page() {
                         fontSize={20}
                         borderRadius={20}
                         ml={"40px"}
+                        onClick={() => handleClickFollow(u.id)}
                       >
-                        Follow
+                        {dataFollowing &&
+                        dataFollowing.some((f: any) => f.id === u.id)
+                          ? "Unfollow"
+                          : "Follow"}
                       </Button>
                     </Box>
                   </Box>
